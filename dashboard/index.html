@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocol launch radar</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="radar-dot" aria-hidden="true"></div>
+    <div>
+      <h1>TOKEN RADAR</h1>
+      <p class="tagline">Which pre-token protocol is worth farming next — and what to do about it.</p>
+    </div>
+  </div>
+  <div class="snapshot-note">
+    <span>Snapshot <strong id="asOf">—</strong></span>
+    <span>DefiLlama protocols, frozen at fetch</span>
+  </div>
+</header>
+
+<main>
+  <section class="stats" id="stats" aria-label="Board summary"></section>
+
+  <section class="controls" aria-label="Filter and sort">
+    <input id="q" type="search" placeholder="Search a protocol…" aria-label="Search protocols">
+    <select id="cat" aria-label="Filter by sector"><option value="">All sectors</option></select>
+    <select id="chain" aria-label="Filter by chain"><option value="">All chains</option></select>
+    <select id="band" aria-label="Filter by implied value">
+      <option value="">Any implied value</option>
+      <option value="100m">Over $100M implied</option>
+      <option value="10m">$10M – $100M implied</option>
+      <option value="1m">$1M – $10M implied</option>
+      <option value="under1m">Under $1M implied</option>
+    </select>
+    <select id="diff" aria-label="Filter by farm difficulty">
+      <option value="">Any difficulty</option>
+      <option value="Easy">Easy to farm</option>
+      <option value="Medium">Medium to farm</option>
+      <option value="Hard">Hard to farm</option>
+    </select>
+    <label class="check"><input id="wlOnly" type="checkbox"> Watchlist only</label>
+    <select id="sort" aria-label="Sort the board">
+      <option value="rank">Sort: rank</option>
+      <option value="implied">Sort: implied value</option>
+      <option value="tvl">Sort: TVL</option>
+      <option value="growth">Sort: 7-day growth</option>
+      <option value="age">Sort: oldest first</option>
+    </select>
+  </section>
+
+  <section id="boardWrap">
+    <p class="hint" id="count"></p>
+    <div class="table-scroll">
+      <table id="board">
+        <thead>
+          <tr>
+            <th>#</th><th>Protocol</th><th>Sector</th><th>Chains</th>
+            <th class="num">TVL</th><th class="num">7d</th><th class="num">Age</th>
+            <th class="num">Implied value</th><th>Farm</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="detail" hidden aria-label="Protocol detail"></section>
+
+  <section class="method" aria-label="How the ranking works">
+    <h2>How the ranking works</h2>
+    <p class="formula">implied value = TVL &times; comp &times; growth &times; age &times; breadth</p>
+    <div class="method-grid">
+      <div>
+        <h3>comp — what the market pays per TVL dollar</h3>
+        <p>For each sector, the median market-cap-to-TVL ratio of the protocols in that sector that already have a token (at least four comparables, shrunk toward the global median). Sectors with fewer comparables use the global median. The table below shows every multiple this board used.</p>
+        <table class="comps" id="compTable">
+          <thead><tr><th>Sector</th><th class="num">Multiple</th><th class="num">Comps</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div>
+        <h3>growth · age · breadth</h3>
+        <ul>
+          <li><strong>growth</strong> — 1 plus the seven-day TVL change, clamped to &minus;30%…+30%. A protocol gaining TVL is worth more than one losing it.</li>
+          <li><strong>age</strong> — 0.85 rising to 1.15 over a protocol&rsquo;s first three years running with no token recorded. Longer with no token, more pent-up launch value.</li>
+          <li><strong>breadth</strong> — +0.03 per chain after the first, up to five extra chains. More chains, more surface to farm.</li>
+        </ul>
+        <h3>What &ldquo;no token&rdquo; means</h3>
+        <p>A protocol <em>records</em> no token when DefiLlama records none for it. That is the snapshot&rsquo;s record, not proof it has none. Wrapped, staked and bridged products of tokens that already trade are left out, as are versioned names (V2, 2.0) and exchange products.</p>
+        <h3>Read this before farming</h3>
+        <p>Implied values are this board&rsquo;s own claim, never a prediction that a token will launch, and never financial advice. Farm plans say what each step costs and how long it takes; they cannot promise a reward. Never deposit money you need back within a month, and never share a seed phrase with any site.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Token Radar — built by an AI agent for make.fun&rsquo;s <strong>token-radar-01</strong> bounty ($1,325 in USDC). Data: DefiLlama snapshot, frozen 14 November 2026. The board ranks 198 protocols that record no token; 40 of them are the snapshot&rsquo;s watchlist.</p>
+</footer>
+
+<script src="z-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
