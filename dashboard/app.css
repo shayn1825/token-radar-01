@@ -53,6 +53,19 @@ main { max-width: 1180px; margin: 0 auto; padding: 18px 28px 30px; }
 .stat b { display: block; font-size: 22px; color: var(--lime); }
 .stat span { color: var(--muted); font-size: 13px; }
 
+/* farm first — the top 3, with one line of reason each */
+.farmfirst { margin-bottom: 18px; }
+.farmfirst h2 { margin: 0 0 8px; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--lime); }
+.ff-card {
+  background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--lime);
+  border-radius: 8px; padding: 9px 14px; margin-bottom: 8px;
+  display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline;
+}
+.ff-card a { font-weight: 700; text-decoration: none; }
+.ff-card a:hover { text-decoration: underline; }
+.ff-rank { color: var(--lime); font-weight: 700; }
+.ff-why { color: var(--muted); font-size: 13px; }
+
 /* controls */
 .controls {
   display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
@@ -71,6 +84,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 18px 28px 30px; }
 
 /* board table */
 .hint { color: var(--muted); margin: 0 0 8px; font-size: 13px; }
+.strip {
+  color: var(--muted); margin: 0 0 8px; font-size: 13px;
+  border-left: 3px solid var(--amber); padding-left: 10px;
+}
+.strip:empty { display: none; }
 .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
 table { border-collapse: collapse; width: 100%; background: var(--panel); }
 th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -84,6 +102,15 @@ td.rank { color: var(--lime); font-weight: 700; }
 td .slug { color: var(--faint); font-size: 12px; }
 td .wl { color: var(--amber); font-size: 11px; font-weight: 700; letter-spacing: .05em; }
 td .implied { color: var(--lime); font-weight: 700; }
+/* per-row signal badges: the week's move and the time with no token */
+.sig { display: block; margin-top: 3px; font-size: 12px; font-weight: 700; }
+.sig span + span { margin-left: 8px; }
+.sig .up { color: var(--green); }
+.sig .down { color: var(--red); }
+.sig .age { color: var(--muted); font-weight: 400; }
+/* implied-value bar, log-scaled against the #1 row */
+.impbar { display: block; height: 4px; background: #1c2c4a; border-radius: 2px; margin-top: 5px; min-width: 70px; }
+.impbar i { display: block; height: 100%; background: var(--lime); border-radius: 2px; }
 .pos { color: var(--green); }
 .neg { color: var(--red); }
 .diff { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 700; }
@@ -96,6 +123,18 @@ td .implied { color: var(--lime); font-weight: 700; }
 }
 .plan-btn:hover { background: rgba(87,217,255,.12); }
 .chains { color: var(--muted); font-size: 13px; }
+
+/* already launched — the excluded side, greyed out */
+.launched { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; margin: 18px 0; }
+.launched:empty { display: none; }
+.launched h2 { margin: 0 0 6px; font-size: 19px; }
+.launched p { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+.launched-table { opacity: .72; }
+.launched-table td { color: var(--muted); }
+.notfarm {
+  display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  background: rgba(93,109,140,.2); color: var(--faint); letter-spacing: .05em; white-space: nowrap;
+}
 
 /* detail view */
 #detail {

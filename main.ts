@@ -7,7 +7,7 @@
 //   /output/board.json       the ranked board, one row per protocol
 //   /output/dashboard/      the static page (index.html, app.css,
 //                            app.js) plus z-data.js, the board data
-//   /output/screenshots/    the three screenshots of the page
+//   /output/screenshots/    the four screenshots of the page
 //   /output/dossier.json    the dossier buildDossier writes
 //
 // It runs twice at grade time and both runs must write the same bytes:
@@ -22,7 +22,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-board.ts';
-import { rankBoard } from './lib/model.ts';
+import { rankBoard, tokenBearingSample } from './lib/model.ts';
 import type { Snapshot } from './lib/model.ts';
 
 const REPO_ROOT = dirname(fileURLToPath(import.meta.url));
@@ -52,6 +52,9 @@ function copyFlat(fromDir: string, toDir: string): string[] {
  * and nulls stay null, so the page can sort and filter on them
  * without parsing. The meta block names the snapshot, the comp table
  * and the formula, so the page can show how every value was made.
+ * The four factor columns (comp, growth, age, breadth) are rounded to
+ * four decimals, so the formula box on the page can show them exactly
+ * as the model computed them.
  */
 function dataFileText(
   rows: ReturnType<typeof rankBoard>['rows'],
@@ -71,11 +74,12 @@ function dataFileText(
     r.farm_difficulty,
     r.watchlist ? 1 : 0,
     r.farm_steps,
-    Math.round(r.comp_multiple * 1000) / 1000,
-    Math.round(r.growth_factor * 1000) / 1000,
-    Math.round(r.age_factor * 1000) / 1000,
-    Math.round(r.breadth_factor * 1000) / 1000,
+    Math.round(r.comp_multiple * 10000) / 10000,
+    Math.round(r.growth_factor * 10000) / 10000,
+    Math.round(r.age_factor * 10000) / 10000,
+    Math.round(r.breadth_factor * 10000) / 10000,
   ]);
+  const launched = tokenBearingSample(snapshot.protocols);
   const meta = {
     asOf: snapshot.as_of,
     source: snapshot.source,
@@ -87,6 +91,8 @@ function dataFileText(
     compByCategory: comps.byCategory,
     compsPerCategory: comps.compsPerCategory,
     formula: 'implied = TVL x comp x growth x age x breadth',
+    launchedCount: launched.count,
+    launchedSample: launched.sample,
   };
   // One row per line, so a reader of the dossier (whose text is capped
   // at 65,536 bytes) still sees the first hundred rows whole instead
@@ -102,6 +108,7 @@ function main(): void {
 
   const snapshot = JSON.parse(readFileSync(inputPath, 'utf8')) as Snapshot;
   const { rows, comps } = rankBoard(snapshot);
+  const launched = tokenBearingSample(snapshot.protocols);
 
   const board = {
     as_of: snapshot.as_of,
@@ -111,9 +118,10 @@ function main(): void {
       'implied_value_usd = tvl_usd x comp_multiple x growth_factor x age_factor x breadth_factor. ' +
       'comp_multiple is the median market-cap-to-TVL ratio of token-bearing protocols in the same category ' +
       '(at least four comparables, shrunk toward the global median; the global median otherwise). ' +
-      'growth_factor is 1 plus the seven-day TVL change, clamped to [-30%, +30%]. ' +
-      'age_factor rises from 0.85 to 1.15 over a protocol\'s first three years with no token recorded. ' +
+      'growth_factor is 1 plus the seven-day TVL change, clamped to [-60%, +60%]. ' +
+      'age_factor rises from 0.50 to 2.00 over a protocol\'s first three years with no token recorded. ' +
       'breadth_factor adds 0.03 per chain after the first, up to five. ' +
+      'The board ranks only protocols that record no token; the ' + launched.count + ' protocols that already record a token are excluded from it and shown separately as launched, not farmable. ' +
       'A protocol "records no token" when DefiLlama records none for it; that is the snapshot\'s record, not proof it has none. ' +
       'Implied values are this entry\'s own claim, never a prediction that a token will launch.',
     rows,
@@ -138,6 +146,7 @@ function main(): void {
     `total implied $${rows.reduce((s, r) => s + r.implied_value_usd, 0).toLocaleString('en-US')}`);
   console.log(`dashboard files copied: ${dashFiles.join(', ')}; screenshots copied: ${shotFiles.join(', ')}`);
   console.log(`wrote ${outDir}/board.json, ${outDir}/dashboard/z-data.js, ${outDir}/dossier.json`);
+  console.log(`launched (excluded from the board): ${launched.count} protocols, largest ${launched.sample[0]!.name}`);
 }
 
 main();

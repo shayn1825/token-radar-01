@@ -24,6 +24,8 @@
 <main>
   <section class="stats" id="stats" aria-label="Board summary"></section>
 
+  <section id="farmfirst" class="farmfirst" aria-label="Farm first"></section>
+
   <section class="controls" aria-label="Filter and sort">
     <input id="q" type="search" placeholder="Search a protocol…" aria-label="Search protocols">
     <select id="cat" aria-label="Filter by sector"><option value="">All sectors</option></select>
@@ -52,6 +54,7 @@
   </section>
 
   <section id="boardWrap">
+    <p class="strip" id="launchedStrip"></p>
     <p class="hint" id="count"></p>
     <div class="table-scroll">
       <table id="board">
@@ -66,6 +69,8 @@
       </table>
     </div>
   </section>
+
+  <section id="launched" class="launched" aria-label="Already launched — excluded"></section>
 
   <section id="detail" hidden aria-label="Protocol detail"></section>
 
@@ -84,8 +89,8 @@
       <div>
         <h3>growth · age · breadth</h3>
         <ul>
-          <li><strong>growth</strong> — 1 plus the seven-day TVL change, clamped to &minus;30%…+30%. A protocol gaining TVL is worth more than one losing it.</li>
-          <li><strong>age</strong> — 0.85 rising to 1.15 over a protocol&rsquo;s first three years running with no token recorded. Longer with no token, more pent-up launch value.</li>
+          <li><strong>growth</strong> — 1 plus the seven-day TVL change, clamped to &minus;60%…+60%. A protocol gaining TVL is worth more than one losing it.</li>
+          <li><strong>age</strong> — 0.50 rising to 2.00 over a protocol&rsquo;s first three years running with no token recorded. Longer with no token, more pent-up launch value: a three-year veteran is worth double its TVL multiple, a brand-new protocol half.</li>
           <li><strong>breadth</strong> — +0.03 per chain after the first, up to five extra chains. More chains, more surface to farm.</li>
         </ul>
         <h3>What &ldquo;no token&rdquo; means</h3>

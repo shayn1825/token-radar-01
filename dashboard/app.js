@@ -7,7 +7,11 @@
 // ageDays, implied, difficulty, watchlist, farmSteps, comp, growth,
 // ageFactor, breadthFactor]. The detail view shows the same four
 // factors the model multiplied, so any implied value on the page can
-// be checked against its own inputs.
+// be checked against its own inputs. The board itself shows why each
+// row ranks where it does: a bar under the implied value (width is
+// log-scaled, so the whole board is comparable at a glance) and two
+// badges under the protocol name — the week's TVL move and how long
+// it has run with no token recorded.
 
 (function () {
   'use strict';
@@ -52,6 +56,44 @@
       stat(String(META.globalComp || ''), 'global comp multiple (mcap / TVL)');
     $('asOf').textContent = META.asOf || '—';
     function stat(b, label) { return '<div class="stat"><b>' + esc(b) + '</b><span>' + esc(label) + '</span></div>'; }
+  }
+
+  // ---- farm first: the top 3, with one line of reason each --------
+  function renderFarmFirst() {
+    var top = ROWS.slice(0, 3);
+    var el = $('farmfirst');
+    if (!el || !top.length) return;
+    el.innerHTML = '<h2>Farm first</h2>' + top.map(function (r) {
+      var why = money(r[R.implied]) + ' implied &middot; ' + ageText(r[R.age]) + ' with no token' +
+        (r[R.chg] === null ? '' : ' &middot; ' + pct(r[R.chg]) + ' in 7 days');
+      return '<div class="ff-card"><a href="#/p/' + esc(r[R.slug]) + '"><span class="ff-rank">#' + r[R.rank] + '</span> ' +
+        esc(r[R.name]) + '</a><span class="ff-why">' + why + '</span></div>';
+    }).join('');
+  }
+
+  // ---- already launched: the excluded side of the snapshot ---------
+  function renderLaunched() {
+    var strip = $('launchedStrip');
+    var el = $('launched');
+    if (!META.launchedCount) return;
+    if (strip) {
+      strip.textContent = META.launchedCount + ' protocols in this snapshot already have a token — excluded from this board (see below).';
+    }
+    if (!el) return;
+    var sample = META.launchedSample || [];
+    var rows = sample.map(function (p) {
+      return '<tr><td>' + esc(p.name) + '</td><td>' + esc(p.category) + '</td>' +
+        '<td class="num">' + money(p.tvl_usd) + '</td>' +
+        '<td class="num">' + (p.mcap_usd === null ? '—' : money(p.mcap_usd)) + '</td>' +
+        '<td><span class="notfarm">NOT FARMABLE</span></td></tr>';
+    }).join('');
+    el.innerHTML =
+      '<h2>Already launched — excluded from this board</h2>' +
+      '<p>' + META.launchedCount + ' protocols in the snapshot already record a token. They are not on the radar, ' +
+      'because a token that already trades cannot be farmed for a launch. The ten largest are shown below, greyed out.</p>' +
+      '<div class="table-scroll"><table class="launched-table"><thead><tr>' +
+      '<th>Protocol</th><th>Sector</th><th class="num">TVL</th><th class="num">Market cap</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
 
   // ---- filter controls ----------------------------------------------
@@ -111,22 +153,38 @@
   }
 
   // ---- board ---------------------------------------------------------
+  // The implied bar is log-scaled against the #1 row, so a $700M row
+  // and a $1M row are both visible on the same scale.
+  var maxImplied = ROWS.length ? ROWS[0][R.implied] : 1;
+  var maxLog = Math.log10(Math.max(maxImplied, 2));
+
+  function badges(r) {
+    var out = '';
+    if (r[R.chg] !== null && r[R.chg] !== undefined) {
+      var up = r[R.chg] >= 0;
+      out += '<span class="' + (up ? 'up' : 'down') + '">' + (up ? '▲' : '▼') + ' ' + pct(r[R.chg]) + ' 7d</span>';
+    }
+    out += '<span class="age">' + '◉ ' + (r[R.age] === null || r[R.age] === undefined ? 'age ?' : ageText(r[R.age]) + ' no token') + '</span>';
+    return '<span class="sig">' + out + '</span>';
+  }
+
   function renderBoard() {
     var list = filteredRows();
     $('count').textContent = list.length + ' of ' + ROWS.length + ' protocols — click a row or “Plan” for its detail view and farm steps.';
     $('rows').innerHTML = list.map(function (r) {
       var chg = r[R.chg];
       var chgCls = chg === null ? '' : (chg >= 0 ? 'pos' : 'neg');
+      var barW = Math.max(2, Math.round((Math.log10(Math.max(r[R.implied], 2)) / maxLog) * 100));
       return '<tr data-slug="' + esc(r[R.slug]) + '">' +
         '<td class="rank">' + r[R.rank] + '</td>' +
         '<td><strong>' + esc(r[R.name]) + '</strong><br><span class="slug">' + esc(r[R.slug]) + '</span>' +
-        (r[R.wl] === 1 ? ' <span class="wl">WATCHLIST</span>' : '') + '</td>' +
+        (r[R.wl] === 1 ? ' <span class="wl">WATCHLIST</span>' : '') + '<br>' + badges(r) + '</td>' +
         '<td>' + esc(r[R.cat]) + '</td>' +
         '<td class="chains">' + esc(r[R.chains].slice(0, 3).join(', ')) + (r[R.chains].length > 3 ? ' +' + (r[R.chains].length - 3) : '') + '</td>' +
         '<td class="num">' + money(r[R.tvl]) + '</td>' +
         '<td class="num ' + chgCls + '">' + pct(chg) + '</td>' +
         '<td class="num">' + ageText(r[R.age]) + '</td>' +
-        '<td class="num implied">' + money(r[R.implied]) + '</td>' +
+        '<td class="num"><span class="implied">' + money(r[R.implied]) + '</span><span class="impbar"><i style="width:' + barW + '%"></i></span></td>' +
         '<td><span class="diff ' + esc(r[R.diff]) + '">' + esc(r[R.diff]) + '</span></td>' +
         '<td><button class="plan-btn" data-slug="' + esc(r[R.slug]) + '">Plan</button></td>' +
         '</tr>';
@@ -148,10 +206,10 @@
     detail.hidden = false;
     var formula =
       moneyFull(r[R.tvl]) + ' TVL\n' +
-      'x ' + r[R.comp].toFixed(3) + ' comp (' + esc(r[R.cat]) + ' multiple)\n' +
-      'x ' + r[R.growth].toFixed(3) + ' growth (7d ' + pct(r[R.chg]) + ')\n' +
-      'x ' + r[R.ageF].toFixed(3) + ' age (' + ageText(r[R.age]) + ' with no token recorded)\n' +
-      'x ' + r[R.breadthF].toFixed(2) + ' breadth (' + r[R.chains].length + ' chain' + (r[R.chains].length === 1 ? '' : 's') + ')\n' +
+      'x ' + r[R.comp].toFixed(4) + ' comp (' + esc(r[R.cat]) + ' multiple)\n' +
+      'x ' + r[R.growth].toFixed(4) + ' growth (7d ' + pct(r[R.chg]) + ')\n' +
+      'x ' + r[R.ageF].toFixed(4) + ' age (' + ageText(r[R.age]) + ' with no token recorded)\n' +
+      'x ' + r[R.breadthF].toFixed(4) + ' breadth (' + r[R.chains].length + ' chain' + (r[R.chains].length === 1 ? '' : 's') + ')\n' +
       '= ' + moneyFull(r[R.implied]) + ' implied value';
     detail.innerHTML =
       '<button class="back" id="backBtn">&larr; Back to the board</button>' +
@@ -211,6 +269,8 @@
   }
 
   renderStats();
+  renderFarmFirst();
+  renderLaunched();
   fillSelects();
   renderBoard();
   renderComps();
